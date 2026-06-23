@@ -213,6 +213,21 @@
     flex-shrink: 0;
     background: #000;
   }
+  .video-card .no-thumb {
+    width: 140px;
+    height: 79px;
+    border-radius: 6px;
+    border: 1px solid var(--line);
+    flex-shrink: 0;
+    background: var(--panel-raised);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+  }
+  .video-card .no-thumb::after {
+    content: "🎬";
+  }
   .video-meta { min-width: 0; }
   .video-meta .title {
     font-size: 14px;
@@ -554,7 +569,9 @@
       <div class="x-note" id="xNote">X video usually needs a logged-in session. <a href="#" id="xNoteLink">How to set that up →</a></div>
 
       <div class="video-card" id="videoCard">
-        <img id="thumb" src="" alt="" />
+        <div id="thumbWrap">
+          <img id="thumb" src="" alt="" />
+        </div>
         <div class="video-meta">
           <div class="title" id="vidTitle"></div>
           <div class="uploader" id="vidUploader"></div>
@@ -713,6 +730,8 @@ function resetVideoState() {
   timeline.classList.remove("hidden");
   durationNote.classList.remove("show");
   thumb.src = "";
+  thumb.style.display = "";
+  document.getElementById("thumbWrap").classList.remove("no-thumb");
   vidTitle.textContent = "";
   vidUploader.textContent = "";
   vidDuration.textContent = "";
@@ -863,8 +882,18 @@ async function loadVideo() {
     // the backend needs to proxy it (e.g. X CDN blocks direct loading).
     // Prefix with API base so the browser requests it from the right host.
     const thumbUrl = data.thumbnail || "";
-    console.log("thumbnail from backend:", thumbUrl);
-    thumb.src = thumbUrl.startsWith("/") ? `${API}${thumbUrl}` : thumbUrl;
+    thumb.src = thumbUrl;
+    thumb.style.display = thumbUrl ? "" : "none";
+    const thumbWrap = document.getElementById("thumbWrap");
+    thumbWrap.classList.remove("no-thumb");
+    thumb.onerror = () => {
+      thumb.style.display = "none";
+      thumbWrap.classList.add("no-thumb");
+    };
+    thumb.onload = () => {
+      thumb.style.display = "";
+      thumbWrap.classList.remove("no-thumb");
+    };
     videoCard.classList.add("show");
     timelinePanel.style.display = "block";
 
